@@ -51,7 +51,7 @@ function initScene(texture) {
   renderer.setSize(width, height);
   document.body.appendChild(renderer.domElement);
 
-  let Bubble = new BubbleAnimation(scene,frustumSize,width,height)
+  let Bubble = new BubbleAnimation(scene,frustumSize,width,height,texture[0])
 
   let controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -108,7 +108,7 @@ function initScene(texture) {
 const ribbonArray = [
   {
     name: "ribbon",
-    path: "./particles/1.png",
+    path: `particles/PNG (Transparent)/smoke_0${8}.png`,
   },
 ];
 

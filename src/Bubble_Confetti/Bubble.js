@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export default class BubbleAnimation {
-    constructor(scene, frustumSize, width, height) {
+    constructor(scene, frustumSize, width, height,texture) {
         this.scene = scene;
         this.frustumSize = frustumSize;
         this.aspect = width / height;
@@ -16,6 +16,7 @@ export default class BubbleAnimation {
             color: new THREE.Color(0xffffff * Math.random()),
             transparent: true,
             opacity: 0.8,
+            // alphaMap:texture,
         });
         this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, this.maxParticles);
         this.instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -35,6 +36,7 @@ export default class BubbleAnimation {
         this.hue += 0.01;
         if (this.hue > 0.99) this.hue = 0;
         this.instancedMesh.material.color.setHSL(this.hue, 1, 0.5);
+        
     }
 
     createParticle() {
@@ -58,6 +60,7 @@ export default class BubbleAnimation {
                 particle.size = Math.random() * frustumSize * 0.05 + frustumSize * 0.04;
                 particle.maxLife = Math.random() * frustumSize * 0.5 + frustumSize;
                 particle.life = 0;
+     
             },
             update: () => {
                 particle.position.add(particle.velocity);
@@ -95,6 +98,7 @@ export default class BubbleAnimation {
             const dummy = new THREE.Object3D();
             dummy.position.copy(particle.position);
             dummy.scale.set(particle.size, particle.size, particle.size);
+            dummy.opacity = particle.customOpacity;
             dummy.updateMatrix();
             this.instancedMesh.setMatrixAt(i, dummy.matrix);
         }
