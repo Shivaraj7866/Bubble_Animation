@@ -2,18 +2,18 @@ import * as THREE from "three";
 
 export default class BubbleAnimation {
     constructor(scene, frustumSize, width, height) {
-
-        this.scene = scene
+        this.scene = scene;
         this.frustumSize = frustumSize;
         this.aspect = width / height;
 
         this.maxParticles = 60;
         this.particles = [];
         this.mouse = new THREE.Vector2(0, 0);
+        this.hue = 0.1;
 
         this.geometry = new THREE.CircleGeometry(0.5, 32);
         this.material = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(`hsl(${Math.random() * 360}, 100%, 50%)`),
+            color: new THREE.Color(0xffffff * Math.random()),
             transparent: true,
             opacity: 0.8,
         });
@@ -26,12 +26,15 @@ export default class BubbleAnimation {
         }
 
         window.addEventListener("mousemove", (e) => this.onMouseMove(e));
-
     }
 
     onMouseMove = (event) => {
         this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        this.hue += 0.01;
+        if (this.hue > 0.99) this.hue = 0;
+        this.instancedMesh.material.color.setHSL(this.hue, 1, 0.5);
     }
 
     createParticle() {
@@ -43,21 +46,35 @@ export default class BubbleAnimation {
             life: 0,
             init: (mouseX, mouseY, frustumSize, aspect) => {
                 particle.position.set(
-                    mouseX * frustumSize * aspect,
-                    mouseY * frustumSize,
+                    mouseX * frustumSize * aspect * 0.5,
+                    mouseY * frustumSize * 0.5,
                     0
                 );
                 particle.velocity.set(
-                    (Math.random() - 0.5) * frustumSize * 0.03,
-                    (Math.random() - 0.5) * frustumSize * 0.03,
+                    (Math.random() - 0.5) * frustumSize * 0.015,
+                    (Math.random() - 0.5) * frustumSize * 0.015,
                     0
                 );
-                particle.size = Math.random() * frustumSize * 0.05 + frustumSize * 0.05;
+                particle.size = Math.random() * frustumSize * 0.05 + frustumSize * 0.04;
                 particle.maxLife = Math.random() * frustumSize * 0.5 + frustumSize;
                 particle.life = 0;
             },
             update: () => {
                 particle.position.add(particle.velocity);
+
+                // Check for bounds and make particles bounce back
+                if (
+                    (particle.position.x + particle.size) > this.frustumSize * this.aspect * 0.5 ||
+                    (particle.position.x - particle.size) < -this.frustumSize * this.aspect * 0.5) 
+                    {
+                    particle.velocity.x *= -1;
+                }
+                if ((particle.position.y + particle.size) > this.frustumSize * 0.5 ||
+                     (particle.position.y - particle.size) < -this.frustumSize * 0.5)
+                    {
+                    particle.velocity.y *= -1;
+                }
+
                 particle.velocity.multiplyScalar(0.99);
                 particle.size *= 0.99;
                 particle.life += this.frustumSize * 0.01;
@@ -74,15 +91,15 @@ export default class BubbleAnimation {
                 particle.init(this.mouse.x, this.mouse.y, this.frustumSize, this.aspect);
             }
 
+            // Update instance matrix
             const dummy = new THREE.Object3D();
             dummy.position.copy(particle.position);
             dummy.scale.set(particle.size, particle.size, particle.size);
             dummy.updateMatrix();
             this.instancedMesh.setMatrixAt(i, dummy.matrix);
         }
+
+        // Update instance matrix and colors
         this.instancedMesh.instanceMatrix.needsUpdate = true;
     }
-
 }
-
-
